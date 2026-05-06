@@ -2,7 +2,6 @@ import type { DailyLog, DutyStatus } from '../types'
 
 const W = 1060
 
-// Layout tuned to resemble the provided blank paper log.
 const M = 24
 const gridX = 180
 const gridY = 320
@@ -14,10 +13,7 @@ const gridContainerY = gridY - headerBarH
 
 const remarksTitleY = gridY + gridH + 80
 const remarksRectY = remarksTitleY + 12
-// We don't draw a big remarks "box" like the paper sample; keep only enough height
-// for the angled callouts so Shipping Documents sits directly below.
 const remarksRectH = 90
-// Keep Shipping Documents tight under remarks (like the paper form).
 const shippingTitleY = remarksRectY + remarksRectH + 6
 const instructionY1 = shippingTitleY + 78
 const instructionY2 = instructionY1 + 12
@@ -49,16 +45,27 @@ function labelForStatus(s: DutyStatus) {
 }
 
 export function LogSheet(props: { log: DailyLog }) {
-  const date = new Date(props.log.date + 'T00:00:00')
+  const log = props.log
+  const parsed = log.date ? new Date(`${log.date}T00:00:00`) : new Date()
+  const date = Number.isNaN(parsed.getTime()) ? new Date() : parsed
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   const year = String(date.getFullYear())
 
-  const total24 =
-    props.log.totalHours.offDuty +
-    props.log.totalHours.sleeperBerth +
-    props.log.totalHours.driving +
-    props.log.totalHours.onDuty
+  const th = log.totalHours ?? {
+    offDuty: 0,
+    sleeperBerth: 0,
+    driving: 0,
+    onDuty: 0,
+  }
+  const total24 = th.offDuty + th.sleeperBerth + th.driving + th.onDuty
+
+  const tp = log.totalHoursPretty ?? {
+    offDuty: '0:00',
+    sleeperBerth: '0:00',
+    driving: '0:00',
+    onDuty: '0:00',
+  }
 
   return (
     <div className="w-full">
@@ -67,13 +74,13 @@ export function LogSheet(props: { log: DailyLog }) {
           width="100%"
           viewBox={`0 0 ${W} ${H}`}
           role="img"
-          aria-label={`Log ${props.log.date}`}
+          aria-label={`Log ${log.date || 'unknown date'}`}
           preserveAspectRatio="xMinYMin meet"
         >
-          {/* Outer */}
+          
           <rect x={1} y={1} width={W - 2} height={H - 2} fill="white" stroke="#0f172a" strokeWidth={1.5} />
 
-          {/* Title block (matches paper form) */}
+          
           <text x={M} y={32} fontSize={18} fontWeight={800} fill="#0f172a">
             Driver&apos;s Daily Log
           </text>
@@ -88,7 +95,7 @@ export function LogSheet(props: { log: DailyLog }) {
             Duplicate - Driver retains in his/her possession for 8 days.
           </text>
 
-          {/* Date (month/day/year) row like blank form */}
+          
           <text x={M + 8} y={78} fontSize={10} fill="#0f172a">
             (24 hours)
           </text>
@@ -103,7 +110,7 @@ export function LogSheet(props: { log: DailyLog }) {
             (year)
           </text>
 
-          {/* Show as month/day/year blanks with slashes */}
+          
           <text x={M + 210} y={100} fontSize={16} fontWeight={800} fill="#0f172a">
             {month}
           </text>
@@ -120,29 +127,29 @@ export function LogSheet(props: { log: DailyLog }) {
             {year}
           </text>
 
-          {/* From/To lines on their own row */}
+          
           <text x={M + 8} y={130} fontSize={12} fontWeight={800} fill="#0f172a">
             From:
           </text>
           <line x1={M + 60} y1={128} x2={M + 430} y2={128} stroke="#0f172a" strokeWidth={1} />
           <text x={M + 64} y={125} fontSize={11} fill="#0f172a">
-            {props.log.fromLocation || 'N/A'}
+            {log.fromLocation || 'N/A'}
           </text>
           <text x={M + 460} y={130} fontSize={12} fontWeight={800} fill="#0f172a">
             To:
           </text>
           <line x1={M + 492} y1={128} x2={W - M} y2={128} stroke="#0f172a" strokeWidth={1} />
           <text x={M + 496} y={125} fontSize={11} fill="#0f172a">
-            {props.log.toLocation || 'N/A'}
+            {log.toLocation || 'N/A'}
           </text>
 
-          {/* Top info boxes (match blank layout) */}
+          
           <rect x={M + 18} y={148} width={150} height={40} fill="white" stroke="#0f172a" strokeWidth={1.5} />
           <text x={M + 26} y={204} fontSize={11} fill="#0f172a">
             Total Miles Driving Today
           </text>
           <text x={M + 28} y={174} fontSize={14} fontWeight={800} fill="#0f172a">
-            {props.log.milesDrivingToday}
+            {log.milesDrivingToday}
           </text>
 
           <rect x={M + 182} y={148} width={150} height={40} fill="white" stroke="#0f172a" strokeWidth={1.5} />
@@ -150,7 +157,7 @@ export function LogSheet(props: { log: DailyLog }) {
             Total Mileage Today
           </text>
           <text x={M + 192} y={174} fontSize={14} fontWeight={800} fill="#0f172a">
-            {props.log.milesDrivingToday}
+            {log.milesDrivingToday}
           </text>
 
           <rect x={M + 18} y={214} width={314} height={44} fill="white" stroke="#0f172a" strokeWidth={1.5} />
@@ -161,12 +168,12 @@ export function LogSheet(props: { log: DailyLog }) {
             License Plate(s)/State (show each unit)
           </text>
           <text x={M + 26} y={242} fontSize={12} fontWeight={700} fill="#0f172a">
-            {props.log.vehicleNumbers || 'Tractor: N/A  Trailer: N/A'}
+            {log.vehicleNumbers || 'Tractor: N/A  Trailer: N/A'}
           </text>
 
-          {/* Right-side carrier/address lines (not boxed) */}
+          
           {(() => {
-            const v = props.log.carrierName || 'N/A'
+            const v = log.carrierName || 'N/A'
             const isNA = v.trim().toLowerCase() === 'n/a'
             const x = M + 360
             const yLine = 188
@@ -184,7 +191,7 @@ export function LogSheet(props: { log: DailyLog }) {
           })()}
 
           {(() => {
-            const v = props.log.mainOfficeAddress || 'N/A'
+            const v = log.mainOfficeAddress || 'N/A'
             const isNA = v.trim().toLowerCase() === 'n/a'
             const x = M + 360
             const yLine = 230
@@ -202,7 +209,7 @@ export function LogSheet(props: { log: DailyLog }) {
           })()}
 
           {(() => {
-            const v = props.log.homeTerminalAddress || 'N/A'
+            const v = log.homeTerminalAddress || 'N/A'
             const isNA = v.trim().toLowerCase() === 'n/a'
             const x = M + 360
             const yLine = 258
@@ -219,10 +226,10 @@ export function LogSheet(props: { log: DailyLog }) {
             )
           })()}
 
-          {/* Grid container */}
+          
           <rect x={M} y={gridContainerY} width={W - 2 * M} height={230} fill="white" stroke="#0f172a" />
 
-          {/* Black time header bar (paper style) */}
+          
           <rect x={gridX} y={gridY - headerBarH} width={gridW} height={headerBarH} fill="#0f172a" />
           <text x={gridX + 8} y={gridY - 10} fontSize={9} fontWeight={700} fill="white">
             Mid-
@@ -231,7 +238,7 @@ export function LogSheet(props: { log: DailyLog }) {
             night
           </text>
 
-          {/* Duty labels */}
+          
           {(['OFF', 'SB', 'D', 'ON'] as DutyStatus[]).map((s, idx) => (
             <g key={s}>
               <text x={M + 10} y={gridY + idx * rowH + rowH / 2 + 5} fontSize={12} fontWeight={600} fill="#0f172a">
@@ -240,7 +247,7 @@ export function LogSheet(props: { log: DailyLog }) {
             </g>
           ))}
 
-          {/* Vertical hour lines + hour labels (top) */}
+          
           {Array.from({ length: 25 }).map((_, h) => {
             const x = xForMin(h * 60)
             return (
@@ -255,7 +262,7 @@ export function LogSheet(props: { log: DailyLog }) {
             )
           })}
 
-          {/* 15-min tick marks */}
+          
           {Array.from({ length: 24 * 4 + 1 }).map((_, i) => {
             const x = xForMin(i * 15)
             const isHour = i % 4 === 0
@@ -273,12 +280,7 @@ export function LogSheet(props: { log: DailyLog }) {
             )
           })}
 
-          {/* Paper-style tick rulers (match blank sheet):
-              - OFF: ticks at top edge (down)
-              - SB: ticks at top edge (down)
-              - D: ticks at bottom edge of driving row (up)
-              - ON: ticks at bottom edge (up)
-           */}
+          
           {(() => {
             const yOffTop = gridY
             const ySbTop = gridY + rowH
@@ -290,8 +292,6 @@ export function LogSheet(props: { log: DailyLog }) {
               const x = xForMin(i * 15)
               const isHour = i % 4 === 0
               const isHalfHour = i % 4 === 2
-              // Match paper feel: within each hour the 3 inner ticks are:
-              // 15-min (short ~30%), 30-min (tall ~70%), 45-min (short ~30%).
               const shortLen = Math.round(rowH * 0.3)
               const midLen = Math.round(rowH * 0.7)
               const hourLen = Math.round(rowH * 0.85)
@@ -299,7 +299,6 @@ export function LogSheet(props: { log: DailyLog }) {
               const sw = isHour ? 1.2 : 1
               const op = 0.85
 
-              // OFF top ticks (down)
               tickEls.push(
                 <line
                   key={`off-${i}`}
@@ -313,7 +312,6 @@ export function LogSheet(props: { log: DailyLog }) {
                 />,
               )
 
-              // SB top ticks (down)
               tickEls.push(
                 <line
                   key={`sb-${i}`}
@@ -327,7 +325,6 @@ export function LogSheet(props: { log: DailyLog }) {
                 />,
               )
 
-              // Driving bottom ticks (up)
               tickEls.push(
                 <line
                   key={`d-${i}`}
@@ -341,7 +338,6 @@ export function LogSheet(props: { log: DailyLog }) {
                 />,
               )
 
-              // On-duty bottom ticks (up)
               tickEls.push(
                 <line
                   key={`on-${i}`}
@@ -358,7 +354,7 @@ export function LogSheet(props: { log: DailyLog }) {
             return <g>{tickEls}</g>
           })()}
 
-          {/* Bottom time labels (paper form shows time scale on bottom too) */}
+          
           {Array.from({ length: 25 }).map((_, h) => {
             const x = xForMin(h * 60)
             if (h >= 24) return null
@@ -370,14 +366,14 @@ export function LogSheet(props: { log: DailyLog }) {
             )
           })}
 
-          {/* Horizontal row separators */}
+          
           {Array.from({ length: 5 }).map((_, i) => (
             <line key={i} x1={gridX} y1={gridY + i * rowH} x2={gridX + gridW} y2={gridY + i * rowH} stroke="#0f172a" strokeWidth={1} opacity={0.35} />
           ))}
 
-          {/* Duty line (step-style like paper log) */}
+          
           {(() => {
-            const segs = props.log.segments
+            const segs = (log.segments ?? [])
               .slice()
               .sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin)
               .filter((s) => s.endMin > s.startMin)
@@ -401,7 +397,7 @@ export function LogSheet(props: { log: DailyLog }) {
             return <g>{lines}</g>
           })()}
 
-          {/* Totals column */}
+          
           <rect x={gridX + gridW} y={gridY - 20} width={W - (gridX + gridW) - M} height={gridH + 40} fill="white" stroke="#0f172a" />
           <text x={gridX + gridW + 12} y={gridY - 2} fontSize={11} fontWeight={800} fill="#0f172a">
             Total
@@ -410,10 +406,10 @@ export function LogSheet(props: { log: DailyLog }) {
             Hours
           </text>
           {([
-            ['Off', props.log.totalHoursPretty.offDuty],
-            ['SB', props.log.totalHoursPretty.sleeperBerth],
-            ['D', props.log.totalHoursPretty.driving],
-            ['ON', props.log.totalHoursPretty.onDuty],
+            ['Off', tp.offDuty],
+            ['SB', tp.sleeperBerth],
+            ['D', tp.driving],
+            ['ON', tp.onDuty],
           ] as const).map(([k, v], idx) => (
             <g key={k}>
               <text x={gridX + gridW + 12} y={gridY + idx * rowH + rowH / 2 + 5} fontSize={12} fill="#334155">
@@ -428,22 +424,18 @@ export function LogSheet(props: { log: DailyLog }) {
             Total: {total24.toFixed(2)}h
           </text>
 
-          {/* Remarks + Shipping documents (paper-style lower section) */}
+          
           <text x={M} y={remarksTitleY} fontSize={12} fontWeight={800} fill="#0f172a">
             Remarks
           </text>
 
-          {/* Paper-style remarks callouts (time-aligned with the grid) */}
+          
           {(() => {
-            // Root cause of the "broken" look: too many remark entries land at very similar
-            // x-positions (duty segments can be numerous), so rotated labels overlap.
-            // Fix: keep only meaningful events + auto-pack into lanes to avoid collisions.
-            const items = props.log.remarks
+            const items = (log.remarks ?? [])
               .slice()
               .filter((r) => typeof r.startMin === 'number')
               .filter((r) => {
                 const note = (r.note || '').toLowerCase()
-                // Keep key non-driving events only (matches the paper sample style).
                 if (note.includes('fuel')) return true
                 if (note.includes('break')) return true
                 if (note.includes('pickup')) return true
@@ -455,19 +447,18 @@ export function LogSheet(props: { log: DailyLog }) {
                 if (note.includes('sleeper')) return true
                 if (note.includes('off duty')) return true
                 if (note.includes('on duty')) return true
-                // Otherwise: likely "Drive ..." or generic enroute; skip to avoid clutter.
                 return false
               })
               .sort((a, b) => (a.startMin ?? 0) - (b.startMin ?? 0))
               .slice(0, 12)
 
             const laneH = 20
-            const stemTop = gridY + gridH + 8 // start just below the graph area (like the paper ruler)
+            const stemTop = gridY + gridH + 8
             const stemBottomBase = remarksRectY + 10
             const armLen = 18
             const armUp = 10
             const maxLanes = Math.max(1, Math.floor((remarksRectH - 20) / laneH))
-            const minDx = 90 // minimum horizontal spacing between labels in same lane
+            const minDx = 90
 
             return (
               <g>
@@ -494,13 +485,13 @@ export function LogSheet(props: { log: DailyLog }) {
 
                     return (
                       <g key={`${r.time}-${lane}-${idx}`}>
-                        {/* stem from ruler into remarks */}
+                        
                         <line x1={x} y1={stemTop} x2={x} y2={laneY} stroke="#0f172a" strokeWidth={2} />
-                        {/* small arm (right) */}
+                        
                         <line x1={x} y1={laneY} x2={elbowX} y2={laneY} stroke="#0f172a" strokeWidth={2} />
-                        {/* small up-tick at elbow (paper-style bracket) */}
+                        
                         <line x1={elbowX} y1={laneY} x2={elbowX} y2={laneY - armUp} stroke="#0f172a" strokeWidth={2} />
-                        {/* angled label (no time text on paper sample) */}
+                        
                         <text
                           x={labelX}
                           y={labelY}
@@ -527,17 +518,17 @@ export function LogSheet(props: { log: DailyLog }) {
           </text>
           <line x1={M + 150} y1={shippingTitleY + 16} x2={M + 420} y2={shippingTitleY + 16} stroke="#0f172a" />
           <text x={M + 152} y={shippingTitleY + 12} fontSize={10} fill="#0f172a">
-            {props.log.manifestNumber || 'N/A'}
+            {log.manifestNumber || 'N/A'}
           </text>
           <text x={M} y={shippingTitleY + 40} fontSize={10} fill="#334155">
             Shipper &amp; Commodity:
           </text>
           <line x1={M + 150} y1={shippingTitleY + 38} x2={W - M} y2={shippingTitleY + 38} stroke="#0f172a" />
           <text x={M + 152} y={shippingTitleY + 34} fontSize={10} fill="#0f172a">
-            {props.log.shipperCommodity || 'N/A'}
+            {log.shipperCommodity || 'N/A'}
           </text>
 
-          {/* Paper-style instruction line (sits ABOVE the recap table in the blank form) */}
+          
           <text x={W / 2} y={instructionY1} fontSize={10} textAnchor="middle" fill="#0f172a">
             Enter name of place you reported and where released from work and when and where each change of duty occurred.
           </text>
@@ -545,7 +536,7 @@ export function LogSheet(props: { log: DailyLog }) {
             Use time standard of home terminal.
           </text>
 
-          {/* Bottom recap table (70/8 + 60/7 + 34h restart) */}
+          
           <rect x={M} y={recapTableY} width={W - 2 * M} height={recapTableH} fill="white" stroke="#0f172a" />
 
           <text x={M + 10} y={recapTableY + 18} fontSize={10} fontWeight={800} fill="#0f172a">
@@ -555,7 +546,7 @@ export function LogSheet(props: { log: DailyLog }) {
             Complete at end of day
           </text>
 
-          {/* Column headings */}
+          
           <text x={M + 170} y={recapTableY + 18} fontSize={10} fontWeight={800} fill="#0f172a">
             70 Hour / 8 Day Drivers
           </text>
@@ -571,7 +562,7 @@ export function LogSheet(props: { log: DailyLog }) {
             If you took 34
           </text>
 
-          {/* Left row: on duty today */}
+          
           <text x={M + 10} y={recapTableY + 64} fontSize={9} fill="#0f172a">
             On duty hours today,
           </text>
@@ -579,7 +570,7 @@ export function LogSheet(props: { log: DailyLog }) {
             Total lines:
           </text>
 
-          {/* A/B/C blocks for 70/8 */}
+          
           {(['A.', 'B.', 'C.'] as const).map((lbl, idx) => {
             const x0 = M + 170 + idx * 120
             return (
@@ -601,7 +592,7 @@ export function LogSheet(props: { log: DailyLog }) {
             )
           })}
 
-          {/* A/B/C blocks for 60/7 */}
+          
           {(['A.', 'B.', 'C.'] as const).map((lbl, idx) => {
             const start607 = M + 520
             const colW = 110
@@ -625,7 +616,7 @@ export function LogSheet(props: { log: DailyLog }) {
             )
           })}
 
-          {/* 34-hour restart note block */}
+          
           <text x={W - M - 120} y={recapTableY + 44} fontSize={9} fill="#0f172a">
             consecutive
           </text>
@@ -642,9 +633,9 @@ export function LogSheet(props: { log: DailyLog }) {
             hours available
           </text>
 
-          {/* Footer recap */}
+          
           <text x={M} y={footerY} fontSize={11} fill="#334155">
-            Recap: driving + on-duty = {(props.log.totalHours.driving + props.log.totalHours.onDuty).toFixed(1)} hours · Totals must equal 24 hours.
+            Recap: driving + on-duty = {(th.driving + th.onDuty).toFixed(1)} hours · Totals must equal 24 hours.
           </text>
         </svg>
       </div>

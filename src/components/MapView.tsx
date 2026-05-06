@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip } from 'react-leaflet'
 import type { PlanResponse } from '../types'
 
-export function MapView(props: { result: PlanResponse | null }) {
+export const MapView = memo(function MapView(props: { result: PlanResponse | null }) {
   const coords = useMemo(() => {
     const legs = props.result?.route.legs ?? []
     const all: Array<[number, number]> = []
@@ -69,5 +69,5 @@ export function MapView(props: { result: PlanResponse | null }) {
       ) : null}
     </MapContainer>
   )
-}
+})
 

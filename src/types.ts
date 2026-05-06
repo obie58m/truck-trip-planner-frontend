@@ -45,7 +45,7 @@ export type RouteLeg = {
   durationHours: number
   geometry: {
     type: 'LineString'
-    coordinates: Array<[number, number]> // [lon,lat]
+    coordinates: Array<[number, number]>
   }
 }
 
