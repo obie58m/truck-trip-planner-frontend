@@ -19,9 +19,9 @@ export type PlanTripInput = {
 }
 
 function planEndpointUrl(): string {
-  const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
-  // Local dev: unset → same-origin `/api/...` (Vite proxies to Django in vite.config.ts).
-  // Production (e.g. Vercel): set VITE_API_BASE_URL to your Render app origin, no trailing slash.
+  const base = __BACKEND_ORIGIN__.replace(/\/$/, '')
+  // Empty → `/api/plan/` on the page’s host. On Vercel, `frontend/vercel.json` rewrites that to Render.
+  // Or set VITE_API_BASE_URL / API_BASE_URL at build time to call Render directly.
   return base ? `${base}/api/plan/` : '/api/plan/'
 }
 
