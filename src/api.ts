@@ -18,11 +18,18 @@ export type PlanTripInput = {
   commodity?: string
 }
 
+function planEndpointUrl(): string {
+  const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+  // Local dev: unset → same-origin `/api/...` (Vite proxies to Django in vite.config.ts).
+  // Production (e.g. Vercel): set VITE_API_BASE_URL to your Render app origin, no trailing slash.
+  return base ? `${base}/api/plan/` : '/api/plan/'
+}
+
 export async function planTrip(input: PlanTripInput): Promise<PlanResponse> {
   const controller = new AbortController()
   const timeoutMs = 30_000
   const t = window.setTimeout(() => controller.abort(), timeoutMs)
-  const res = await fetch('/api/plan/', {
+  const res = await fetch(planEndpointUrl(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
